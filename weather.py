@@ -4,7 +4,7 @@ class Weather():
     def __init__(self, API_KEY):
         self.API_KEY = API_KEY
 
-    def getRawDataFromCity(self, city_name):
+    def getSimpleRawDataFromCity(self, city_name):
         base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={self.API_KEY}"
         res = requests.get(base_url).json()
 
@@ -13,7 +13,7 @@ class Weather():
 
         return res
 
-    def getRawDataFromZip(self, zip_code):    
+    def getSimpleRawDataFromZip(self, zip_code):    
         base_url = f"http://api.openweathermap.org/data/2.5/weather?zip={zip_code}&appid={self.API_KEY}"
         res = requests.get(base_url).json()
         if res["cod"] != 200:
@@ -21,7 +21,7 @@ class Weather():
 
         return res
 
-    def getRawDataFromCoords(self, coordinates):
+    def getSimpleRawDataFromCoords(self, coordinates):
         lat = coordinates[0]
         lon = coordinates[1]
         base_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={self.API_KEY}"
@@ -31,13 +31,13 @@ class Weather():
 
         return res
 
-    def getWeather(self, location):
-        if type(location) == int:
-            data = self.getRawDataFromZip(location)
-        elif type(location) == list:
-            data = self.getRawDataFromCoords(location)
+    def getSimpleWeather(self, location):
+        if type(location) == list:
+            data = self.getSimpleRawDataFromCoords(location)
+        elif location.isnumeric():
+            data = self.getSimpleRawDataFromZip(location)
         else:
-            data = self.getRawDataFromCity(location)
+            data = self.getSimpleRawDataFromCity(location)
 
         if data == None:
             return None
@@ -57,3 +57,34 @@ class Weather():
         weatherDict["sunset"] = data["sys"]["sunset"]
 
         return weatherDict
+
+    def getAdvancedRawDataFromCoords(self, lat, lon):
+        base_url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=imperial&appid={self.API_KEY}"
+        res = requests.get(base_url).json()
+        if "cod" in res:
+            print("Error code " + str(res["cod"]))
+            return None
+
+        return res
+
+    def getAdvancedWeather(self, location):
+        # Coordinates
+        if type(location) == list:
+            lat = location[0]
+            lon = location[1]
+
+        # Zip code
+        elif location.isnumeric():
+            tempData = self.getSimpleRawDataFromZip(location)
+            lat = tempData["coord"]["lat"]
+            lon = tempData["coord"]["lon"]
+
+        # City name
+        else:
+            tempData = self.getSimpleRawDataFromCity(location)
+            lat = tempData["coord"]["lat"]
+            lon = tempData["coord"]["lon"]
+
+        data = self.getAdvancedRawDataFromCoords(lat, lon)
+
+        return data
