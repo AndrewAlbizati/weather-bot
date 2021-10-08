@@ -28,7 +28,7 @@ if __name__ == "__main__":
         if message.author.bot:
             return
         
-        # Incomplete command
+        # !weather command
         if message.content.lower().startswith("!weather"):
             location = message.content.lower().replace("!weather ", "")
             data = weather.getSimpleWeather(location)
@@ -43,11 +43,25 @@ if __name__ == "__main__":
                     data = weather.getSimpleWeather([lat, lon])
                 except ValueError:
                     pass
+
+            timestamp = datetime.fromtimestamp(data["dt"])
+            date = timestamp.strftime("%I:%M:%S %p %Z") # HH:MM:SS AM/PM PST
+                
+            embedVar = discord.Embed(title = "Weather for " + message.content[9:] + " (" + date + ")", color = 0xad0808)
+
+            embedVar.description = str(
+            "Temp: **" + str(data["main"]["temp"]) + "** (" + str(data["main"]["temp_min"]) + " - " + str(data["main"]["temp_max"]) + ")\n"
+            "Hum: **" + str(data["main"]["humidity"]) + "%**\n"
+            "*" + str(data["weather"][0]["description"]).capitalize() + "*")
+            
+            embedVar.set_thumbnail(url="https://openweathermap.org/img/wn/" + data["weather"][0]["icon"] + "@2x.png")
+            embedVar.set_footer(text=str(data["coord"]["lat"]) + ", " + str(data["coord"]["lon"]))
+
+            await message.channel.send(embed = embedVar)
         
-            await message.channel.send(str(data))
-        
-        elif message.content.lower().startswith("!aweather") and len(message.content.split(" ")) > 1:
-            location = message.content.lower()[10:]
+        # !fcast command
+        elif message.content.lower().startswith("!fcast") and len(message.content.split(" ")) > 1:
+            location = message.content.lower()[7:]
             data = weather.getAdvancedWeather(location)
 
             # Correct if user sent coordinates
@@ -80,7 +94,7 @@ if __name__ == "__main__":
             index = 0
             
             # Send initial message (first day)
-            embedVar = discord.Embed(title = "Weather for " + message.content[10:], color = 0xad0808)
+            embedVar = discord.Embed(title = "Weather for " + message.content[7:], color = 0xad0808)
 
             embedVar.add_field(name = day_descriptions[index]["name"], value = day_descriptions[index]["value"], inline = False)
             embedVar.set_thumbnail(url="https://openweathermap.org/img/wn/" + day_descriptions[index]["icon"] + "@2x.png")
@@ -129,7 +143,7 @@ if __name__ == "__main__":
                         
                     
                     # Edit the message with the new day
-                    embedVar = discord.Embed(title = "Weather for " + message.content[10:], color = 0xad0808)
+                    embedVar = discord.Embed(title = "Weather for " + message.content[7:], color = 0xad0808)
 
                     embedVar.add_field(name = day_descriptions[index]["name"], value = day_descriptions[index]["value"], inline = False)
 
