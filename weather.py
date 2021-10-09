@@ -4,7 +4,7 @@ class Weather():
     def __init__(self, API_KEY):
         self.API_KEY = API_KEY
 
-    def getSimpleRawDataFromCity(self, city_name):
+    def getRawDataFromCity(self, city_name):
         base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&units=imperial&appid={self.API_KEY}"
         res = requests.get(base_url).json()
 
@@ -13,7 +13,7 @@ class Weather():
 
         return res
 
-    def getSimpleRawDataFromZip(self, zip_code):    
+    def getRawDataFromZip(self, zip_code):    
         base_url = f"http://api.openweathermap.org/data/2.5/weather?zip={zip_code}&units=imperial&appid={self.API_KEY}"
         res = requests.get(base_url).json()
         if res["cod"] != 200:
@@ -21,7 +21,7 @@ class Weather():
 
         return res
 
-    def getSimpleRawDataFromCoords(self, coordinates):
+    def getRawDataFromCoords(self, coordinates):
         lat = coordinates[0]
         lon = coordinates[1]
         base_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=imperial&appid={self.API_KEY}"
@@ -34,20 +34,20 @@ class Weather():
     def getSimpleWeather(self, location):
         # Coordinates
         if type(location) == list:
-            data = self.getSimpleRawDataFromCoords(location)
+            data = self.getRawDataFromCoords(location)
         # Zip Code
         elif location.isnumeric():
-            data = self.getSimpleRawDataFromZip(location)
+            data = self.getRawDataFromZip(location)
         # City Name
         else:
-            data = self.getSimpleRawDataFromCity(location)
+            data = self.getRawDataFromCity(location)
 
         if data == None:
             return None
 
         return data
 
-    def getAdvancedRawDataFromCoords(self, lat, lon):
+    def getRawForecastFromCoords(self, lat, lon):
         base_url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=imperial&appid={self.API_KEY}"
         res = requests.get(base_url).json()
         if "cod" in res:
@@ -56,7 +56,7 @@ class Weather():
 
         return res
 
-    def getAdvancedWeather(self, location):
+    def getForecast(self, location):
         # Coordinates
         if type(location) == list:
             lat = location[0]
@@ -64,16 +64,16 @@ class Weather():
 
         # Zip code
         elif location.isnumeric():
-            tempData = self.getSimpleRawDataFromZip(location)
+            tempData = self.getRawDataFromZip(location)
             lat = tempData["coord"]["lat"]
             lon = tempData["coord"]["lon"]
 
         # City name
         else:
-            tempData = self.getSimpleRawDataFromCity(location)
+            tempData = self.getRawDataFromCity(location)
             lat = tempData["coord"]["lat"]
             lon = tempData["coord"]["lon"]
 
-        data = self.getAdvancedRawDataFromCoords(lat, lon)
+        data = self.getRawForecastFromCoords(lat, lon)
 
         return data

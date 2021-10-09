@@ -43,12 +43,18 @@ if __name__ == "__main__":
                     data = weather.getSimpleWeather([lat, lon])
                 except ValueError:
                     pass
-
-            timestamp = datetime.fromtimestamp(data["dt"])
-            date = timestamp.strftime("%I:%M:%S %p %Z") # HH:MM:SS AM/PM PST
-                
-            embedVar = discord.Embed(title = "Weather for " + message.content[9:] + " (" + date + ")", color = 0xad0808)
-
+            
+            # Location not found
+            if data == None:
+                await message.channel.send("Location not found.")
+                return
+            
+            # Find local time for location
+            timestamp = datetime.utcfromtimestamp(data["dt"] + data["timezone"])
+            date = timestamp.strftime("%I:%M:%S %p") # HH:MM:SS AM/PM
+            
+            # Create embed
+            embedVar = discord.Embed(title = "Weather for " + message.content[9:] + " (" + date + " local time)", color = 0xad0808)
             embedVar.description = str(
             "Temp: **" + str(data["main"]["temp"]) + "** (" + str(data["main"]["temp_min"]) + " - " + str(data["main"]["temp_max"]) + ")\n"
             "Hum: **" + str(data["main"]["humidity"]) + "%**\n"
@@ -62,7 +68,7 @@ if __name__ == "__main__":
         # !fcast command
         elif message.content.lower().startswith("!fcast") and len(message.content.split(" ")) > 1:
             location = message.content.lower()[7:]
-            data = weather.getAdvancedWeather(location)
+            data = weather.getForecast(location)
 
             # Correct if user sent coordinates
             if len(location.split(", ")) == 2:
@@ -71,7 +77,7 @@ if __name__ == "__main__":
                     lat = float(location.split(" ")[0])
                     lon = float(location.split(" ")[1])
 
-                    data = weather.getAdvancedWeather([lat, lon])
+                    data = weather.getForecast([lat, lon])
                 except ValueError:
                     pass
 
