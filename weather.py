@@ -1,79 +1,54 @@
-import requests
+import discord
+from discord.ext import commands
+from datetime import datetime
+from weather_utils import Weather_Utils
 
-class Weather():
-    def __init__(self, API_KEY):
-        self.API_KEY = API_KEY
+class Weather(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        with open("tokens.txt", "r") as f:
+            lines = f.readlines()
+            lines = [line.rstrip() for line in lines]
+            self.weather_utils = Weather_Utils(lines[1])
 
-    def getRawDataFromCity(self, city_name):
-        base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&units=imperial&appid={self.API_KEY}"
-        res = requests.get(base_url).json()
+    @commands.command()
+    async def weather(self, ctx):
+        message = ctx.message
+        
+        location = message.content.lower().replace("!weather ", "")
+        data = self.weather_utils.getSimpleWeather(location)
 
-        if res["cod"] != 200:
-            return None
+        # Correct if user sent coordinates
+        if len(location.split(" ")) == 2:
+            location = location.replace(",", "")
+            try:
+                lat = float(location.split(" ")[0])
+                lon = float(location.split(" ")[1])
 
-        return res
-
-    def getRawDataFromZip(self, zip_code):    
-        base_url = f"http://api.openweathermap.org/data/2.5/weather?zip={zip_code}&units=imperial&appid={self.API_KEY}"
-        res = requests.get(base_url).json()
-        if res["cod"] != 200:
-            return None
-
-        return res
-
-    def getRawDataFromCoords(self, coordinates):
-        lat = coordinates[0]
-        lon = coordinates[1]
-        base_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=imperial&appid={self.API_KEY}"
-        res = requests.get(base_url).json()
-        if res["cod"] != 200:
-            return None
-
-        return res
-
-    def getSimpleWeather(self, location):
-        # Coordinates
-        if type(location) == list:
-            data = self.getRawDataFromCoords(location)
-        # Zip Code
-        elif location.isnumeric():
-            data = self.getRawDataFromZip(location)
-        # City Name
-        else:
-            data = self.getRawDataFromCity(location)
-
+                data = self.weather_utils.getSimpleWeather([lat, lon])
+            except ValueError:
+                pass
+        
+        # Location not found
         if data == None:
-            return None
+            await message.channel.send("Location not found.")
+            return
+        
+        # Find local time for location
+        timestamp = datetime.utcfromtimestamp(data["dt"] + data["timezone"])
+        date = timestamp.strftime("%I:%M:%S %p") # HH:MM:SS AM/PM
+        
+        # Create embed
+        embedVar = discord.Embed(title = "Weather for " + message.content[9:] + " (" + date + " local time)", color = 0xad0808)
+        embedVar.description = str(
+        "Temp: **" + str(data["main"]["temp"]) + "** (" + str(data["main"]["temp_min"]) + " - " + str(data["main"]["temp_max"]) + ")\n"
+        "Hum: **" + str(data["main"]["humidity"]) + "%**\n"
+        "*" + str(data["weather"][0]["description"]).capitalize() + "*")
+        
+        embedVar.set_thumbnail(url="https://openweathermap.org/img/wn/" + data["weather"][0]["icon"] + "@2x.png")
+        embedVar.set_footer(text=str(data["coord"]["lat"]) + ", " + str(data["coord"]["lon"]))
 
-        return data
-
-    def getRawForecastFromCoords(self, lat, lon):
-        base_url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=imperial&appid={self.API_KEY}"
-        res = requests.get(base_url).json()
-        if "cod" in res:
-            print("Error code " + str(res["cod"]))
-            return None
-
-        return res
-
-    def getForecast(self, location):
-        # Coordinates
-        if type(location) == list:
-            lat = location[0]
-            lon = location[1]
-
-        # Zip code
-        elif location.isnumeric():
-            tempData = self.getRawDataFromZip(location)
-            lat = tempData["coord"]["lat"]
-            lon = tempData["coord"]["lon"]
-
-        # City name
-        else:
-            tempData = self.getRawDataFromCity(location)
-            lat = tempData["coord"]["lat"]
-            lon = tempData["coord"]["lon"]
-
-        data = self.getRawForecastFromCoords(lat, lon)
-
-        return data
+        await ctx.channel.send(embed = embedVar)
+    
+def setup(bot):
+    bot.add_cog(Weather(bot))
