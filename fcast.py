@@ -20,8 +20,8 @@ class FCast(commands.Cog):
         data = self.weather_utils.getForecast(location)
 
         # Correct if user sent coordinates
-        if len(location.split(", ")) == 2:
-            location = location.replace(",", "")
+        if len(location.replace(", ", ",").split(",")) == 2:
+            location = location.replace(",", " ")
             try:
                 lat = float(location.split(" ")[0])
                 lon = float(location.split(" ")[1])
@@ -108,6 +108,11 @@ class FCast(commands.Cog):
                 await msg.edit(embed = embedVar)
             except asyncio.TimeoutError:
                 # Timeout
+                try:
+                    await msg.remove_reaction("⬅️", self.bot.user)
+                    await msg.remove_reaction("➡️", self.bot.user)
+                except:
+                    pass
                 break
 def setup(bot):
     bot.add_cog(FCast(bot))
