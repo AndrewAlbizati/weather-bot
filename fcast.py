@@ -17,18 +17,21 @@ class FCast(commands.Cog):
         message = ctx.message
 
         location = message.content.lower()[7:]
-        data = self.weather_utils.getForecast(location)
 
-        # Correct if user sent coordinates
-        if len(location.replace(", ", ",").split(",")) == 2:
-            location = location.replace(",", " ")
-            try:
-                lat = float(location.split(" ")[0])
-                lon = float(location.split(" ")[1])
+        try:
+            # Correct if user sent coordinates
+            if len(location.replace(", ", ",").split(",")) == 2:
+                location = location.replace(", ", ",")
+    
+                lat = float(location.split(",")[0])
+                lon = float(location.split(",")[1])
 
-                data = self.weather_utils.getForecast([lat, lon])
-            except ValueError:
-                pass
+                data = self.weather_utils.getForecast([lat, lon])      
+            else:
+                data = self.weather_utils.getForecast(location)
+        except:
+            await ctx.send("Location not found!")
+            return
 
         day_descriptions = []
 

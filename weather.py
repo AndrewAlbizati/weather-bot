@@ -15,23 +15,21 @@ class Weather(commands.Cog):
     async def weather(self, ctx):
         message = ctx.message
         
-        location = message.content.lower().replace("!weather ", "")
-        data = self.weather_utils.getSimpleWeather(location)
+        location = message.content.lower()[9:]
 
-        # Correct if user sent coordinates
-        if len(location.split(" ")) == 2:
-            location = location.replace(",", "")
-            try:
-                lat = float(location.split(" ")[0])
-                lon = float(location.split(" ")[1])
+        try:
+            # Correct if user sent coordinates
+            if len(location.replace(", ", ",").split(",")) == 2:
+                location = location.replace(", ", ",")
+    
+                lat = float(location.split(",")[0])
+                lon = float(location.split(",")[1])
 
-                data = self.weather_utils.getSimpleWeather([lat, lon])
-            except ValueError:
-                pass
-        
-        # Location not found
-        if data == None:
-            await message.channel.send("Location not found.")
+                data = self.weather_utils.getSimpleWeather([lat, lon])      
+            else:
+                data = self.weather_utils.getSimpleWeather(location)
+        except:
+            await ctx.send("Location not found!")
             return
         
         # Find local time for location
