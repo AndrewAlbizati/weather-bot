@@ -1,15 +1,13 @@
 from discord.ext import commands
 import discord
 from discord import Option
+
 import asyncio
 from weather_utils import Weather_Utils
 import json
 from datetime import datetime
 
 if __name__ == "__main__":
-    # Get tokens from tokens.txt
-    # First line = Discord
-    # Second line = OpenWeatherMap
     with open("tokens.json", "r") as f:
         data = json.load(f)
 
@@ -24,7 +22,7 @@ if __name__ == "__main__":
         print(f'{bot.user} has connected to Discord!')
 
     @bot.slash_command(description="Returns the weather for a city/state")
-    async def weather(ctx, location: Option(str, "Location", required=True, default=None)):
+    async def weather(ctx, location: Option(str, "Location that the weather will be found for", required=True, default=None)):
         if location == None:
             return        
 
@@ -65,7 +63,7 @@ if __name__ == "__main__":
         await ctx.respond(embed = embedVar)
 
 
-    @bot.slash_command(description="Returns the forecast for a city/state")
+    @bot.slash_command(description="Location that the forecast will be found for")
     async def forecast(ctx, location: Option(str, "Location", required=True, default=None)):
         if location == None:
             return
