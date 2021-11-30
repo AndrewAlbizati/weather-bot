@@ -1,5 +1,5 @@
 # Weather Bot
-This Discord bot is designed to return weather data from OpenWeatherMap for a provided location.
+This Discord bot is designed to return weather data from OpenWeatherMap for a provided location. This bot runs on Python 3.10.0
 
 ## Setup
 First, go to [the Discord developers page](https://discord.com/developers/docs/intro) and create an application, then register a bot. 
@@ -18,8 +18,6 @@ Next, add a file called `config.json` to the main folder and add the following:
     "weather": "OpenWeatherMap api key goes here"
 }
 ```
-
-
 
 # Commands
 - **/weather &lt;location>** *Returns the weather for a city/state*
